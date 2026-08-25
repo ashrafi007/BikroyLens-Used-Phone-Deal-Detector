@@ -11,16 +11,17 @@ permissions:
 
 jobs:
   scrape:
-    runs-on: ubuntu-latest
+    # Bikroy blocks GitHub-hosted cloud runner IPs outright (confirmed: every
+    # request came back 403, even robots.txt). Running on a self-hosted
+    # runner instead — same machine/IP that scraped successfully manually —
+    # sidesteps the block and keeps this at ৳0/month. Trade-off: the host
+    # Mac needs to be on and logged in at the scheduled time.
+    runs-on: [self-hosted, macOS, bikroylens]
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Install dependencies
-        run: pip install scrapy
+        run: pip3 install --quiet scrapy
 
       - name: Run spider
         working-directory: bikroy_scraper
