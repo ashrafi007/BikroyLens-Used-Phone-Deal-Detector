@@ -1,0 +1,41 @@
+name: Daily Bikroy Scrape
+
+on:
+  schedule:
+    # 00:00 UTC = 06:00 Dhaka time (UTC+6) — runs once daily
+    - cron: "0 0 * * *"
+  workflow_dispatch: {} # allows manually triggering a run from the Actions tab
+
+permissions:
+  contents: write # needed to commit the new CSV back to the repo
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install scrapy
+
+      - name: Run spider
+        working-directory: bikroy_scraper
+        run: |
+          DATE=$(date -u +%F)
+          scrapy crawl bikroy -o "../data/bikroy_${DATE}.csv" -L INFO
+
+      - name: Commit and push new CSV
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/*.csv
+          if git diff --cached --quiet; then
+            echo "No new data to commit"
+            exit 0
+          fi
+          git commit -m "Daily scrape: $(date -u +%F)"
+          git push
