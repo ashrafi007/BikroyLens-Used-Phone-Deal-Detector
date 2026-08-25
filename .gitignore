@@ -1,0 +1,18 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.scrapy/
+
+# Env / secrets
+.env
+
+# OS
+.DS_Store
+
+# Node (future frontend)
+node_modules/
+dist/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/

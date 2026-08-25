@@ -1,0 +1,125 @@
+2026-08-25 20:44:35 [scrapy.utils.log] INFO: Scrapy 2.18.0 started (bot: bikroy_scraper)
+2026-08-25 20:44:35 [scrapy.utils.log] INFO: Versions:
+{'lxml': '6.1.2',
+ 'libxml2': '2.14.6',
+ 'cssselect': '1.5.0',
+ 'parsel': '1.11.0',
+ 'w3lib': '2.4.1',
+ 'Twisted': '26.4.0',
+ 'Python': '3.14.3 (main, Feb  3 2026, 15:32:20) [Clang 17.0.0 '
+           '(clang-1700.6.3.2)]',
+ 'pyOpenSSL': '26.4.0 (OpenSSL 3.6.3 9 Jun 2026)',
+ 'cryptography': '50.0.0',
+ 'Platform': 'macOS-15.7.5-x86_64-i386-64bit-Mach-O'}
+2026-08-25 20:44:35 [scrapy.addons] INFO: Enabled addons:
+[]
+2026-08-25 20:44:35 [scrapy.extensions.telnet] INFO: Telnet Password: 9bdffc11b8fe248f
+2026-08-25 20:44:35 [scrapy.middleware] INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.logcount.LogCount',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.memusage.MemoryUsage',
+ 'scrapy.extensions.closespider.CloseSpider',
+ 'scrapy.extensions.feedexport.FeedExporter',
+ 'scrapy.extensions.logstats.LogStats',
+ 'scrapy.extensions.throttle.AutoThrottle']
+2026-08-25 20:44:35 [scrapy.crawler] INFO: Overridden settings:
+{'AUTOTHROTTLE_ENABLED': True,
+ 'AUTOTHROTTLE_MAX_DELAY': 30,
+ 'AUTOTHROTTLE_START_DELAY': 1,
+ 'AUTOTHROTTLE_TARGET_CONCURRENCY': 2.0,
+ 'BOT_NAME': 'bikroy_scraper',
+ 'CLOSESPIDER_ITEMCOUNT': 1000,
+ 'CONCURRENT_REQUESTS_PER_DOMAIN': 4,
+ 'DOWNLOAD_DELAY': 0.5,
+ 'FEED_EXPORT_ENCODING': 'utf-8',
+ 'LOG_LEVEL': 'INFO',
+ 'NEWSPIDER_MODULE': 'bikroy_scraper.spiders',
+ 'ROBOTSTXT_OBEY': True,
+ 'SPIDER_MODULES': ['bikroy_scraper.spiders'],
+ 'USER_AGENT': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+               'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 '
+               'Safari/537.36'}
+2026-08-25 20:44:35 [scrapy.middleware] INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.RedirectMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats']
+2026-08-25 20:44:35 [scrapy.middleware] INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.start.StartSpiderMiddleware',
+ 'scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware',
+ 'scrapy.spidermiddlewares.metacopy.MetaCopyDetectionMiddleware']
+2026-08-25 20:44:35 [scrapy.middleware] INFO: Enabled item pipelines:
+[]
+2026-08-25 20:44:35 [scrapy.core.engine] INFO: Spider opened
+2026-08-25 20:44:35 [scrapy.extensions.logstats] INFO: Crawled 0 pages (at 0 pages/min), scraped 0 items (at 0 items/min)
+2026-08-25 20:44:35 [scrapy.extensions.telnet] INFO: Telnet console listening on 127.0.0.1:6023
+2026-08-25 20:44:35 [bikroy] INFO: Loaded 32 bracket URLs from links.md
+2026-08-25 20:44:59 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/chattogram/search?query=apple+iphone&price_min=120000&page=3>: HTTP status code is not handled or not allowed
+2026-08-25 20:45:02 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/rajshahi/search?query=apple+iphone&price_min=120000&page=3>: HTTP status code is not handled or not allowed
+2026-08-25 20:45:03 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/chattogram/search?price_min=79000&query=samsung+phone&page=3>: HTTP status code is not handled or not allowed
+2026-08-25 20:45:04 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/rajshahi/search?price_min=49000&query=samsung+phone&page=3>: HTTP status code is not handled or not allowed
+2026-08-25 20:45:35 [scrapy.extensions.logstats] INFO: Crawled 101 pages (at 101 pages/min), scraped 36 items (at 36 items/min)
+2026-08-25 20:46:35 [scrapy.extensions.logstats] INFO: Crawled 199 pages (at 98 pages/min), scraped 134 items (at 98 items/min)
+2026-08-25 20:47:35 [scrapy.extensions.logstats] INFO: Crawled 297 pages (at 98 pages/min), scraped 232 items (at 98 items/min)
+2026-08-25 20:48:35 [scrapy.extensions.logstats] INFO: Crawled 395 pages (at 98 pages/min), scraped 327 items (at 95 items/min)
+2026-08-25 20:48:45 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/chattogram/search?price_min=34000&query=Xiaomi+phone&page=2>: HTTP status code is not handled or not allowed
+2026-08-25 20:48:49 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/chattogram/search?price_min=65000&query=oneplus+phone&page=2>: HTTP status code is not handled or not allowed
+2026-08-25 20:48:50 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/rajshahi/search?price_min=30000&query=oneplus+phone&page=2>: HTTP status code is not handled or not allowed
+2026-08-25 20:48:52 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/chattogram/search?price_min=25000&query=nothing+phone&price_max=65000&page=2>: HTTP status code is not handled or not allowed
+2026-08-25 20:48:52 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/chattogram/search?price_min=65000&query=nothing+phone&page=2>: HTTP status code is not handled or not allowed
+2026-08-25 20:48:53 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/rajshahi/search?price_min=21000&query=nothing+phone&price_max=40000&page=2>: HTTP status code is not handled or not allowed
+2026-08-25 20:48:57 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/rajshahi/search?price_min=27000&query=Xiaomi+phone&page=3>: HTTP status code is not handled or not allowed
+2026-08-25 20:48:59 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/dhaka/search?price_min=43000&query=oneplus+phone&page=3>: HTTP status code is not handled or not allowed
+2026-08-25 20:48:59 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/chattogram/search?price_min=20000&query=oneplus+phone&price_max=65000&page=3>: HTTP status code is not handled or not allowed
+2026-08-25 20:49:00 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/rajshahi/search?price_min=22000&query=oneplus+phone&price_max=30000&page=3>: HTTP status code is not handled or not allowed
+2026-08-25 20:49:02 [scrapy.spidermiddlewares.httperror] INFO: Ignoring response <404 https://bikroy.com/dhaka/search?price_min=55000&query=nothing+phone&page=3>: HTTP status code is not handled or not allowed
+2026-08-25 20:49:35 [scrapy.extensions.logstats] INFO: Crawled 493 pages (at 98 pages/min), scraped 385 items (at 58 items/min)
+2026-08-25 20:50:35 [scrapy.extensions.logstats] INFO: Crawled 592 pages (at 99 pages/min), scraped 484 items (at 99 items/min)
+2026-08-25 20:51:16 [scrapy.core.engine] INFO: Closing spider (finished)
+2026-08-25 20:51:16 [scrapy.extensions.feedexport] INFO: Stored csv feed (552 items) in: /Users/home/Documents/Projects/BikroyLens/data/bikroy_2026-08-25.csv
+2026-08-25 20:51:16 [scrapy.statscollectors] INFO: Dumping Scrapy stats:
+{'downloader/request_bytes': 403043,
+ 'downloader/request_count': 660,
+ 'downloader/request_method_count/GET': 660,
+ 'downloader/response_bytes': 24491690,
+ 'downloader/response_count': 660,
+ 'downloader/response_status_count/200': 645,
+ 'downloader/response_status_count/404': 15,
+ 'elapsed_time_seconds': 400.25446715101134,
+ 'feedexport/success_count/FileFeedStorage': 1,
+ 'finish_reason': 'finished',
+ 'finish_time': datetime.datetime(2026, 8, 25, 14, 51, 16, 165725, tzinfo=datetime.timezone.utc),
+ 'httpcompression/response_bytes': 73932145,
+ 'httpcompression/response_count': 660,
+ 'httperror/response_ignored_count': 15,
+ 'httperror/response_ignored_status_count/404': 15,
+ 'item_scraped_count': 552,
+ 'items_per_minute': 82.8,
+ 'log_count/INFO': 25,
+ 'memusage/max': 299413504,
+ 'memusage/startup': 66150400,
+ 'request_depth_max': 3,
+ 'response_received_count': 660,
+ 'responses_per_minute': 99.0,
+ 'robotstxt/request_count': 1,
+ 'robotstxt/response_count': 1,
+ 'robotstxt/response_status_count/200': 1,
+ 'scheduler/dequeued': 659,
+ 'scheduler/dequeued/memory': 659,
+ 'scheduler/enqueued': 659,
+ 'scheduler/enqueued/memory': 659,
+ 'start_time': datetime.datetime(2026, 8, 25, 14, 44, 35, 921745, tzinfo=datetime.timezone.utc)}
+2026-08-25 20:51:16 [scrapy.core.engine] INFO: Spider closed (finished)
