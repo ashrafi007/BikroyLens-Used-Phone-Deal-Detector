@@ -2,8 +2,8 @@ name: Daily Bikroy Scrape
 
 on:
   schedule:
-    # 00:00 UTC = 06:00 Dhaka time (UTC+6) — runs once daily
-    - cron: "0 0 * * *"
+    # 19:30 UTC = 01:30 Dhaka time (UTC+6, next calendar day) — runs once daily
+    - cron: "30 19 * * *"
   workflow_dispatch: {} # allows manually triggering a run from the Actions tab
 
 permissions:
