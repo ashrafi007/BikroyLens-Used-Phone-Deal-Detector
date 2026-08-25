@@ -21,11 +21,17 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: pip3 install --quiet scrapy
+        # macOS system Python is "externally managed" (PEP 668) — same as
+        # local dev, needs a venv rather than a bare pip install.
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --quiet scrapy
 
       - name: Run spider
         working-directory: bikroy_scraper
         run: |
+          source ../.venv/bin/activate
           DATE=$(date -u +%F)
           scrapy crawl bikroy -o "../data/bikroy_${DATE}.csv" -L INFO
 
