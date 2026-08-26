@@ -2,8 +2,11 @@ name: Daily Bikroy Scrape
 
 on:
   schedule:
-    # 19:30 UTC = 01:30 Dhaka time (UTC+6, next calendar day) — runs once daily
-    - cron: "30 19 * * *"
+    # Every 2 hours, not once at a fixed time — a single fixed slot depends
+    # on the Mac being awake at that exact moment, which proved unreliable.
+    # The "already scraped today?" guard below makes repeated runs cheap
+    # no-ops, so this just needs the Mac on *sometime* during the day.
+    - cron: "0 */2 * * *"
   workflow_dispatch: {} # allows manually triggering a run from the Actions tab
 
 permissions:
@@ -20,7 +23,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check if today's data already exists
+        id: check
+        run: |
+          DATE=$(date -u +%F)
+          if [ -f "data/bikroy_${DATE}.csv" ]; then
+            echo "Already scraped today ($DATE) — skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install dependencies
+        if: steps.check.outputs.skip != 'true'
         # macOS system Python is "externally managed" (PEP 668) — same as
         # local dev, needs a venv rather than a bare pip install.
         run: |
@@ -29,6 +44,7 @@ jobs:
           pip install --quiet scrapy
 
       - name: Run spider
+        if: steps.check.outputs.skip != 'true'
         working-directory: bikroy_scraper
         run: |
           source ../.venv/bin/activate
@@ -39,6 +55,7 @@ jobs:
           scrapy crawl bikroy -O "../data/bikroy_${DATE}.csv" -L INFO
 
       - name: Commit and push new CSV
+        if: steps.check.outputs.skip != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
