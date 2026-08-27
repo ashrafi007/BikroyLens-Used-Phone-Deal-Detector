@@ -5,7 +5,7 @@
 -- listings: raw scraped data, append-only, one row per listing
 -- per scrape day. Never UPDATEd — the loader only INSERTs.
 -- ============================================================
-CREATE TABLE listings (
+CREATE TABLE IF NOT EXISTS listings (
     id            SERIAL PRIMARY KEY,
     raw_title     TEXT NOT NULL,
     price         NUMERIC,
@@ -29,14 +29,14 @@ CREATE TABLE listings (
     CONSTRAINT unique_url_per_day UNIQUE (url, scraped_date)
 );
 
-CREATE INDEX idx_listings_url ON listings (url);
-CREATE INDEX idx_listings_scraped_at ON listings (scraped_at);
+CREATE INDEX IF NOT EXISTS idx_listings_url ON listings (url);
+CREATE INDEX IF NOT EXISTS idx_listings_scraped_at ON listings (scraped_at);
 
 -- ============================================================
 -- phones_normalized: cleaned/derived data, one row per listing
 -- per scrape day, produced by the NLP normalizer from `listings`.
 -- ============================================================
-CREATE TABLE phones_normalized (
+CREATE TABLE IF NOT EXISTS phones_normalized (
     id               SERIAL PRIMARY KEY,
     listing_id       INTEGER NOT NULL REFERENCES listings(id),
     brand            TEXT,
@@ -55,6 +55,6 @@ CREATE TABLE phones_normalized (
     is_suspicious    BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE INDEX idx_phones_brand_model ON phones_normalized (brand, model);
-CREATE INDEX idx_phones_price_tier ON phones_normalized (price_tier);
-CREATE INDEX idx_phones_listing_id ON phones_normalized (listing_id);
+CREATE INDEX IF NOT EXISTS idx_phones_brand_model ON phones_normalized (brand, model);
+CREATE INDEX IF NOT EXISTS idx_phones_price_tier ON phones_normalized (price_tier);
+CREATE INDEX IF NOT EXISTS idx_phones_listing_id ON phones_normalized (listing_id);
