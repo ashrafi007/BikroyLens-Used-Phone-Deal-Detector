@@ -1,13 +1,15 @@
 name: Daily Bikroy Scrape
 
 on:
-  schedule:
-    # Every 2 hours, not once at a fixed time — a single fixed slot depends
-    # on the Mac being awake at that exact moment, which proved unreliable.
-    # The "already scraped today?" guard below makes repeated runs cheap
-    # no-ops, so this just needs the Mac on *sometime* during the day.
-    - cron: "0 */2 * * *"
-  workflow_dispatch: {} # allows manually triggering a run from the Actions tab
+  # No `schedule:` trigger — GitHub's cron requires a registered self-hosted
+  # runner to be online at the exact tick, and does NOT queue/retry a missed
+  # tick. That proved too fragile (lid-close sleep, idle sleep, and network
+  # blips all silently dropped scheduled runs with zero record of it even
+  # happening). Daily automation now runs from a local launchd job
+  # (~/bikroylens-local-scrape/run_daily_scrape.sh) that scrapes and pushes
+  # directly, independent of any runner registration. This workflow is kept
+  # only for manual on-demand runs from the Actions tab.
+  workflow_dispatch: {}
 
 permissions:
   contents: write # needed to commit the new CSV back to the repo
