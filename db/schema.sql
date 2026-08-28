@@ -52,7 +52,13 @@ CREATE TABLE IF NOT EXISTS phones_normalized (
 
     -- "box open" in title AND price in the top 20% of that listing's own
     -- price_tier (computed from current data, not a fixed ৳ cutoff).
-    is_suspicious    BOOLEAN NOT NULL DEFAULT FALSE
+    is_suspicious    BOOLEAN NOT NULL DEFAULT FALSE,
+
+    -- One normalized row per raw listings row (including repeat scrapes of
+    -- the same phone across days — each gets its own listings.id and thus
+    -- its own normalized row). Lets the populate script use ON CONFLICT
+    -- DO NOTHING to stay idempotent, same pattern as the loader.
+    CONSTRAINT unique_listing_id UNIQUE (listing_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_phones_brand_model ON phones_normalized (brand, model);
