@@ -83,8 +83,19 @@ def main():
             thresholds = get_suspicious_thresholds(cur)
             print("is_suspicious thresholds (80th percentile per tier):", thresholds)
 
+            # Only rows not yet normalized — not a full-table rescan every
+            # run. With ~2,300 rows already normalized and only ~77-80
+            # genuinely new listings/day, scanning everything each run held
+            # one connection open long enough to hit a server-side timeout
+            # (psycopg2.OperationalError: server closed the connection
+            # unexpectedly) once the table grew past a few thousand rows.
             cur.execute(
-                "SELECT id, raw_title, price, condition_raw FROM listings"
+                """
+                SELECT l.id, l.raw_title, l.price, l.condition_raw
+                FROM listings l
+                LEFT JOIN phones_normalized n ON n.listing_id = l.id
+                WHERE n.id IS NULL
+                """
             )
             rows = cur.fetchall()
 
@@ -119,6 +130,12 @@ def main():
                     inserted += 1
                 else:
                     skipped_dupe += 1
+
+                # Commit periodically, not just once at the very end — if
+                # the connection drops mid-run, this loses at most a
+                # partial batch instead of the whole thing.
+                if inserted % 50 == 0:
+                    conn.commit()
 
         conn.commit()
         print(f"{inserted} inserted, {skipped_dupe} already normalized")
