@@ -44,4 +44,5 @@ fi
 
 if [ -f "data/bikroy_${DATE}.csv" ]; then
   python3 db/load_listings.py "data/bikroy_${DATE}.csv" >> "$LOG" 2>&1
+  python3 nlp/populate_normalized.py >> "$LOG" 2>&1
 fi
