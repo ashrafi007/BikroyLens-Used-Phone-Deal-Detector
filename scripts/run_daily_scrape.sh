@@ -22,6 +22,17 @@ REPO_DIR="/Users/home/bikroylens-local-scrape/repo"
 DATE=$(date -u +%F)
 LOG="/Users/home/bikroylens-local-scrape/scrape_${DATE}.log"
 
+# Daytime-only window (08:00-23:00 local) — overnight hours repeatedly hit
+# deep "Standby" sleep (especially on battery) that no amount of caffeinate
+# tuning fully prevented, silently missing ticks with no chance to catch up
+# until someone opened the lid. Restricting to hours the Mac is naturally
+# in use avoids fighting that battle at all; the skip-if-already-done
+# guard below still means it just needs to catch one tick during the day.
+HOUR=$(date +%H)
+if [ "$HOUR" -lt 8 ] || [ "$HOUR" -ge 23 ]; then
+  exit 0
+fi
+
 cd "$REPO_DIR"
 git pull --rebase origin main >> "$LOG" 2>&1 || true
 
