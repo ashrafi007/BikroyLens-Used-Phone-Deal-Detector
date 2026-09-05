@@ -21,6 +21,14 @@ set -e
 REPO_DIR="/Users/home/bikroylens-local-scrape/repo"
 DATE=$(date -u +%F)
 LOG="/Users/home/bikroylens-local-scrape/scrape_${DATE}.log"
+DIAG_LOG="/Users/home/bikroylens-local-scrape/tick_diagnostic.log"
+
+# Diagnostic: log every single tick's computed DATE/HOUR unconditionally,
+# BEFORE the daytime check below — the daytime check exits before any of
+# the normal $LOG writes happen, so a silent early-exit and a genuine
+# problem look identical from the outside. This file makes every tick
+# observable regardless of which path it takes.
+echo "$(date '+%Y-%m-%d %H:%M:%S %Z'): DATE=$DATE HOUR=$(date +%H) TZ_env=${TZ:-unset}" >> "$DIAG_LOG"
 
 # Daytime-only window (08:00-23:00 local) — overnight hours repeatedly hit
 # deep "Standby" sleep (especially on battery) that no amount of caffeinate
