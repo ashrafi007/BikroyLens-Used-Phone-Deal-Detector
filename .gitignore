@@ -16,3 +16,8 @@ dist/
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
+
+# Generated model artifacts — regenerated daily, accuracy_history.csv
+# tracks the trend instead of keeping every snapshot in git history
+ml/fair_price_model.json
+ml/model_results.csv
