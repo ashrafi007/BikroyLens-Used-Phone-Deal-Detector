@@ -74,18 +74,42 @@ def append_history(row):
         writer.writerow(row)
 
 
+def write_predictions(conn, model_df):
+    """Writes predicted_price/fair_price_min/fair_price_max/deal_score onto
+    the *latest* phones_normalized row for each url — this is what "current
+    listing" means for the API, deployed separately from the scraping Mac,
+    to serve directly from Postgres without needing the model file itself."""
+    with conn.cursor() as cur:
+        for _, row in model_df.iterrows():
+            cur.execute(
+                """
+                UPDATE phones_normalized
+                SET predicted_price = %s, fair_price_min = %s,
+                    fair_price_max = %s, deal_score = %s
+                WHERE listing_id = %s
+                """,
+                (
+                    row["predicted_price"],
+                    row["fair_price_min"],
+                    row["fair_price_max"],
+                    row["deal_score"],
+                    int(row["listing_id"]),
+                ),
+            )
+    conn.commit()
+
+
 def main():
     conn = psycopg2.connect(DATABASE_URL)
     query = """
         SELECT DISTINCT ON (l.url)
-            l.url, l.price, l.location, l.photo_count, l.seller_type,
+            l.id AS listing_id, l.url, l.price, l.location, l.photo_count, l.seller_type,
             n.brand, n.model, n.storage, n.condition_clean
         FROM listings l
         JOIN phones_normalized n ON n.listing_id = l.id
         ORDER BY l.url, l.scraped_date DESC
     """
     df = pd.read_sql(query, conn)
-    conn.close()
 
     df["storage_gb"] = df["storage"].apply(parse_storage)
     df["city"] = df["location"].apply(extract_city)
@@ -143,7 +167,10 @@ def main():
 
         model.save_model(MODEL_PATH)
         model_df.to_csv(RESULTS_PATH, index=False)
-        print(f"saved: {MODEL_PATH}, {RESULTS_PATH}")
+        write_predictions(conn, model_df)
+        print(f"saved: {MODEL_PATH}, {RESULTS_PATH}, and wrote predictions to phones_normalized")
+
+    conn.close()
 
     append_history(
         {

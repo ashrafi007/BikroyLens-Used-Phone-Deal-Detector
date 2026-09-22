@@ -58,7 +58,17 @@ CREATE TABLE IF NOT EXISTS phones_normalized (
     -- the same phone across days — each gets its own listings.id and thus
     -- its own normalized row). Lets the populate script use ON CONFLICT
     -- DO NOTHING to stay idempotent, same pattern as the loader.
-    CONSTRAINT unique_listing_id UNIQUE (listing_id)
+    CONSTRAINT unique_listing_id UNIQUE (listing_id),
+
+    -- Written by ml/train_model.py during the daily retrain, not by the
+    -- normalizer. NULL until the first successful training run touches
+    -- this row. Stored here (not just in the local model_results.csv)
+    -- so the API — deployed separately from the scraping Mac — can serve
+    -- predictions straight from Postgres without needing the model file.
+    predicted_price  NUMERIC,
+    fair_price_min   NUMERIC,
+    fair_price_max   NUMERIC,
+    deal_score       NUMERIC
 );
 
 CREATE INDEX IF NOT EXISTS idx_phones_brand_model ON phones_normalized (brand, model);
