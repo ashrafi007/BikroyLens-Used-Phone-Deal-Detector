@@ -65,3 +65,12 @@ if [ -f "data/bikroy_${DATE}.csv" ]; then
   python3 db/load_listings.py "data/bikroy_${DATE}.csv" >> "$LOG" 2>&1
   python3 nlp/populate_normalized.py >> "$LOG" 2>&1
 fi
+
+# Retrain the fair-price model once per day, gated on whether today's date
+# already has an entry in accuracy_history.csv -- not on the scrape-skip
+# check above, since load/normalize (and thus fresh normalized rows) can
+# complete on a later tick than the scrape itself. Idempotent by design:
+# safe to re-check every tick, only actually retrains once a day.
+if [ -f "data/bikroy_${DATE}.csv" ] && ! grep -q "^${DATE}T" ml/accuracy_history.csv 2>/dev/null; then
+  python3 ml/train_model.py >> "$LOG" 2>&1
+fi
