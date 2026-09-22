@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: bikroylens-api
+    runtime: python
+    plan: free
+    rootDir: api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false # set manually in the Render dashboard — never committed
