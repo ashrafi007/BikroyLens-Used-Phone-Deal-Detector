@@ -146,6 +146,15 @@ def row_to_listing(row):
 # ---------------------------------------------------------------------
 
 
+@app.get("/")
+def root():
+    return {
+        "service": "BikroyLens API",
+        "docs": "/docs",
+        "health": "/api/health",
+    }
+
+
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
