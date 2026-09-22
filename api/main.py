@@ -29,6 +29,13 @@ if not DATABASE_URL:
 # slow enough to be noticeable.
 db_pool = psycopg2.pool.SimpleConnectionPool(1, 10, DATABASE_URL)
 
+# The project's actual scope (see PROJECT_CONTEXT.md) — Bikroy's own
+# location text occasionally bleeds through to nearby districts outside
+# these 3 (a handful of stray Khulna/Kushtia/Pabna/etc. rows), which
+# clutters a city breakdown chart without being a real part of the
+# dataset's intended coverage. City-grouped queries filter to just these.
+TARGET_CITIES = ["Dhaka", "Chattogram", "Rajshahi"]
+
 app = FastAPI(title="BikroyLens API")
 
 # Wide open for now — this is a portfolio/demo project, not a
@@ -168,8 +175,10 @@ def stats():
                 f"""
                 SELECT split_part(location, ',', 1) as city, COUNT(*) as count
                 FROM ({BASE_QUERY} ORDER BY l.url, l.scraped_date DESC) t
+                WHERE split_part(location, ',', 1) = ANY(%s)
                 GROUP BY city ORDER BY count DESC
-                """
+                """,
+                (TARGET_CITIES,),
             )
             cities = [dict(r) for r in cur.fetchall()]
 
@@ -338,10 +347,10 @@ def insights(brand: Optional[str] = None, model: Optional[str] = None):
                 f"""
                 WITH current AS ({BASE_QUERY} ORDER BY l.url, l.scraped_date DESC)
                 SELECT split_part(location, ',', 1) AS city, COUNT(*) AS count, AVG(price) AS avg_price
-                FROM current {where_sql}
+                FROM current {where_sql} AND split_part(location, ',', 1) = ANY(%s)
                 GROUP BY city ORDER BY count DESC
                 """,
-                params,
+                params + [TARGET_CITIES],
             )
             by_city = [dict(r) for r in cur.fetchall()]
 
