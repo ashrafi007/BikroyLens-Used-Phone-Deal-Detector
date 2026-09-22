@@ -91,7 +91,7 @@ export default function Insights() {
                       stroke="var(--text-muted)"
                       tickFormatter={(v) => `${Math.round(v / 1000)}k`}
                     />
-                    <Tooltip formatter={(v: number) => formatPrice(v)} />
+                    <Tooltip formatter={(v) => formatPrice(Number(v))} />
                     <Line type="monotone" dataKey="avg_price" stroke="var(--accent)" strokeWidth={2.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -112,7 +112,7 @@ export default function Insights() {
                       stroke="var(--text-muted)"
                       tickFormatter={(v) => `${Math.round(v / 1000)}k`}
                     />
-                    <Tooltip formatter={(v: number) => formatPrice(v)} />
+                    <Tooltip formatter={(v) => formatPrice(Number(v))} />
                     <Bar dataKey="avg_price" fill="var(--accent)" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
