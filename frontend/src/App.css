@@ -255,6 +255,7 @@
   gap: 10px;
   flex-wrap: wrap;
   position: relative;
+  z-index: 1;
   background: rgba(255, 255, 255, 0.95);
   padding: 8px;
   border-radius: var(--radius-lg);
@@ -267,9 +268,13 @@
   background: transparent;
   font-size: 14px;
   font-family: inherit;
-  color: var(--text-primary);
+  color: #171a2b;
   padding: 12px 14px;
   border-radius: var(--radius-md);
+}
+
+.search-bar input::placeholder {
+  color: #8990ab;
 }
 
 .search-bar select:focus,
@@ -373,8 +378,8 @@
 }
 
 .deal-score--good {
-  background: rgba(52, 201, 155, 0.14);
-  color: var(--accent);
+  background: rgba(47, 111, 237, 0.14);
+  color: var(--status-info);
 }
 
 .deal-score--fair {
