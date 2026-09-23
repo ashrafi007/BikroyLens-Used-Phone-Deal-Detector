@@ -56,8 +56,23 @@ else
   git add "data/bikroy_${DATE}.csv"
   if ! git diff --cached --quiet; then
     git commit -m "Daily scrape: ${DATE} (local scheduler)" >> "$LOG" 2>&1
-    git push >> "$LOG" 2>&1
-    echo "$(date): committed and pushed data for ${DATE}" >> "$LOG"
+  fi
+fi
+
+# Push separately from committing, and on every tick (not just the one that
+# scraped) -- this repo is also pushed to directly by interactive dev work,
+# so a race is expected, not exceptional. A failed push here must NOT be
+# fatal (this ran inside `set -e` unguarded before, which silently skipped
+# load/normalize/retrain for the rest of the tick whenever it lost the
+# race) and must be retried rather than stranding the commit forever.
+if [ -n "$(git log origin/main..HEAD 2>/dev/null)" ]; then
+  if ! git push >> "$LOG" 2>&1; then
+    echo "$(date): push rejected (probably raced another push to main), retrying after rebase" >> "$LOG"
+    if git pull --rebase origin main >> "$LOG" 2>&1 && git push >> "$LOG" 2>&1; then
+      echo "$(date): push retry succeeded" >> "$LOG"
+    else
+      echo "$(date): push retry failed, will retry again next tick" >> "$LOG"
+    fi
   fi
 fi
 
