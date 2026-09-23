@@ -10,28 +10,31 @@ services:
       - key: DATABASE_URL
         sync: false # set manually in the Render dashboard — never committed
 
-  # Daily scrape -> load -> normalize -> retrain cycle, replacing the
-  # Mac's launchd timer. Runs once/day (no need for the Mac script's
-  # 30-min-tick retry pattern -- that exists to work around a laptop
-  # that sleeps and misses ticks, which doesn't apply to a cloud cron
-  # job that runs reliably on schedule). Schedule is in UTC: 15:00 UTC
-  # = 21:00 Bangladesh time, chosen to capture most of the day's new
-  # listings before retraining -- adjust to taste.
+  # Trigger service for the daily scrape -> load -> normalize -> retrain
+  # cycle, replacing the Mac's launchd timer. Render's Cron Job product
+  # would be the natural fit for "run this once a day" but requires a
+  # paid plan -- this is a free Web Service instead (pipeline_service/
+  # main.py), woken up once a day by a GitHub Actions scheduled workflow
+  # (.github/workflows/trigger-pipeline.yml) that POSTs to /run. GitHub's
+  # own runner never touches Bikroy directly this time -- it only calls
+  # this service, which is what actually scrapes -- so this doesn't
+  # repeat the mistake that got GitHub Actions' hosted runners 403'd
+  # earlier in this project.
   #
-  # UNTESTED RISK: Bikroy already blocked GitHub Actions' hosted
-  # runners (403) earlier in this project. Render's IPs are the same
-  # general category (cloud/datacenter), so this may get blocked too
-  # -- that's exactly what deploying this is meant to find out. If it
-  # does get blocked, the Mac's launchd automation is still intact as
-  # a fallback (scripts/run_daily_scrape.sh + the plists under
+  # UNTESTED RISK: Render's IPs are still a cloud/datacenter range, same
+  # general category as GitHub Actions'. Whether Bikroy blocks those too
+  # is exactly what deploying this is meant to find out. If it does get
+  # blocked, the Mac's launchd automation is still intact as a fallback
+  # (scripts/run_daily_scrape.sh + the plist under
   # ~/Library/LaunchAgents on the Mac).
-  - type: cron
+  - type: web
     name: bikroylens-pipeline
     runtime: python
-    plan: starter # cron jobs aren't available on the free plan
-    schedule: "0 15 * * *"
+    plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: bash scripts/cloud_pipeline.sh
+    startCommand: uvicorn pipeline_service.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
         sync: false # set manually in the Render dashboard — never committed
+      - key: PIPELINE_TRIGGER_SECRET
+        sync: false # set manually in the Render dashboard — also goes in GitHub Actions secrets, must match
