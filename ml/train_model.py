@@ -8,6 +8,15 @@ a script so it can run unattended as part of the daily automation. The
 notebook stays for manual/interactive exploration; this is the
 "production" version that keeps the saved model fresh automatically.
 
+Deal scores are computed from out-of-fold (K-fold cross-validated)
+predictions, not from a model predicting on rows it was trained on --
+with a high-cardinality categorical like `model`, an in-sample prediction
+is close to memorized, which pinned nearly every listing at a ~100
+score regardless of actual price. Each row's predicted_price instead
+comes from a fold that never saw that row during training. The MAPE/RMSE
+reported here are computed the same way, across all folds. A final model
+fit on 100% of the data is what actually gets saved to disk.
+
 Safety: if a retrain's MAPE is much worse than the last recorded one
 (>50% relatively worse), the new model/results are NOT saved over the
 working ones -- only logged as a flagged anomaly in accuracy_history.csv.
@@ -27,7 +36,7 @@ import psycopg2
 import xgboost as xgb
 from dotenv import load_dotenv
 from sklearn.metrics import mean_absolute_percentage_error, root_mean_squared_error
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 
 load_dotenv()
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -41,6 +50,7 @@ RESULTS_PATH = os.path.join(ML_DIR, "model_results.csv")
 HISTORY_PATH = os.path.join(ML_DIR, "accuracy_history.csv")
 
 DEGRADATION_THRESHOLD = 1.5  # new MAPE > 1.5x last MAPE = flagged, not promoted
+N_SPLITS = 5  # folds for out-of-fold deal-score predictions
 
 
 def parse_storage(val):
@@ -126,28 +136,31 @@ def main():
     y = model_df["price"]
     y_log = np.log(y)
 
-    X_train, X_test, y_train_log, y_test_log, y_train, y_test = train_test_split(
-        X, y_log, y, test_size=0.2, random_state=42
-    )
+    def make_model():
+        return xgb.XGBRegressor(
+            n_estimators=300,
+            max_depth=6,
+            learning_rate=0.05,
+            enable_categorical=True,
+            random_state=42,
+        )
 
-    model = xgb.XGBRegressor(
-        n_estimators=300,
-        max_depth=6,
-        learning_rate=0.05,
-        enable_categorical=True,
-        random_state=42,
-    )
-    model.fit(X_train, y_train_log)
+    kf = KFold(n_splits=N_SPLITS, shuffle=True, random_state=42)
+    oof_pred_log = np.zeros(len(model_df))
+    for train_idx, val_idx in kf.split(X):
+        fold_model = make_model()
+        fold_model.fit(X.iloc[train_idx], y_log.iloc[train_idx])
+        oof_pred_log[val_idx] = fold_model.predict(X.iloc[val_idx])
 
-    y_pred_test = np.exp(model.predict(X_test))
-    rmse = root_mean_squared_error(y_test, y_pred_test)
-    mape = mean_absolute_percentage_error(y_test, y_pred_test) * 100
+    oof_pred = np.exp(oof_pred_log)
+    rmse = root_mean_squared_error(y, oof_pred)
+    mape = mean_absolute_percentage_error(y, oof_pred) * 100
 
     last_mape = load_last_mape()
     degraded = last_mape is not None and mape > last_mape * DEGRADATION_THRESHOLD
     promoted = not degraded
 
-    print(f"rows: {len(df)} | usable: {len(model_df)} | train: {len(X_train)} | test: {len(X_test)}")
+    print(f"rows: {len(df)} | usable: {len(model_df)} | {N_SPLITS}-fold out-of-fold evaluation")
     print(f"RMSE: BDT {rmse:,.0f} | MAPE: {mape:.1f}% | last recorded MAPE: {last_mape}")
 
     if degraded:
@@ -157,7 +170,7 @@ def main():
             f"the next run overwrites this warning."
         )
     else:
-        model_df["predicted_price"] = np.exp(model.predict(X))
+        model_df["predicted_price"] = oof_pred
         model_df["fair_price_min"] = (model_df["predicted_price"] * 0.9).round(0)
         model_df["fair_price_max"] = (model_df["predicted_price"] * 1.1).round(0)
         raw_score = 100 - (
@@ -165,7 +178,9 @@ def main():
         )
         model_df["deal_score"] = raw_score.clip(lower=0, upper=100).round(0)
 
-        model.save_model(MODEL_PATH)
+        final_model = make_model()
+        final_model.fit(X, y_log)
+        final_model.save_model(MODEL_PATH)
         model_df.to_csv(RESULTS_PATH, index=False)
         write_predictions(conn, model_df)
         print(f"saved: {MODEL_PATH}, {RESULTS_PATH}, and wrote predictions to phones_normalized")
