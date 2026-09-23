@@ -82,10 +82,25 @@ if [ -f "data/bikroy_${DATE}.csv" ]; then
 fi
 
 # Retrain the fair-price model once per day, gated on whether today's date
-# already has an entry in accuracy_history.csv -- not on the scrape-skip
-# check above, since load/normalize (and thus fresh normalized rows) can
-# complete on a later tick than the scrape itself. Idempotent by design:
-# safe to re-check every tick, only actually retrains once a day.
-if [ -f "data/bikroy_${DATE}.csv" ] && ! grep -q "^${DATE}T" ml/accuracy_history.csv 2>/dev/null; then
+# already has a row in Postgres' model_training_history -- not on the
+# scrape-skip check above, since load/normalize (and thus fresh normalized
+# rows) can complete on a later tick than the scrape itself. Idempotent by
+# design: safe to re-check every tick, only actually retrains once a day.
+# (This used to grep a local accuracy_history.csv for today's date, but
+# train_model.py now logs history to Postgres instead -- see its module
+# docstring -- so the gate has to check there too, or this would retrain
+# on every single tick instead of once.)
+ALREADY_TRAINED_TODAY=$(python3 -c "
+import os, psycopg2
+from dotenv import load_dotenv
+load_dotenv()
+conn = psycopg2.connect(os.environ['DATABASE_URL'])
+with conn.cursor() as cur:
+    cur.execute(\"SELECT COUNT(*) FROM model_training_history WHERE trained_at::date = CURRENT_DATE\")
+    print(cur.fetchone()[0])
+conn.close()
+" 2>>"$LOG")
+
+if [ -f "data/bikroy_${DATE}.csv" ] && [ "${ALREADY_TRAINED_TODAY:-0}" -eq 0 ] 2>/dev/null; then
   python3 ml/train_model.py >> "$LOG" 2>&1
 fi

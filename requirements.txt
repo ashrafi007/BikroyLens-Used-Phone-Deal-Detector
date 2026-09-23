@@ -1,0 +1,11 @@
+# Dependencies for the cloud pipeline (scripts/cloud_pipeline.sh): scraper,
+# loader, normalizer, and model retrain. The API has its own separate,
+# lighter requirements.txt (api/requirements.txt) -- it doesn't need
+# Scrapy, xgboost, or scikit-learn.
+Scrapy==2.18.0
+psycopg2-binary==2.9.12
+pandas==3.0.5
+numpy==2.5.2
+scikit-learn==1.9.1
+xgboost==3.4.1
+python-dotenv==1.2.3

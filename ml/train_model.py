@@ -19,16 +19,20 @@ fit on 100% of the data is what actually gets saved to disk.
 
 Safety: if a retrain's MAPE is much worse than the last recorded one
 (>50% relatively worse), the new model/results are NOT saved over the
-working ones -- only logged as a flagged anomaly in accuracy_history.csv.
+working ones -- only logged as a flagged anomaly in model_training_history.
 This stops one bad day of scraped data from silently degrading the
 "live" model.
+
+History lives in Postgres (model_training_history), not a git-tracked
+CSV -- this script also runs as an ephemeral cloud cron job with a fresh
+checkout every run and no disk to remember yesterday's MAPE on, so
+Postgres (already the single source of truth for everything else here)
+is what both the Mac and the cloud path read/write.
 """
 
-import csv
 import os
 import re
 import sys
-from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
@@ -47,7 +51,6 @@ if not DATABASE_URL:
 ML_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(ML_DIR, "fair_price_model.json")
 RESULTS_PATH = os.path.join(ML_DIR, "model_results.csv")
-HISTORY_PATH = os.path.join(ML_DIR, "accuracy_history.csv")
 
 DEGRADATION_THRESHOLD = 1.5  # new MAPE > 1.5x last MAPE = flagged, not promoted
 N_SPLITS = 5  # folds for out-of-fold deal-score predictions
@@ -66,22 +69,30 @@ def extract_city(val):
     return str(val).split(",")[0].strip()
 
 
-def load_last_mape():
-    if not os.path.exists(HISTORY_PATH):
-        return None
-    with open(HISTORY_PATH, encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
-    promoted = [r for r in rows if r.get("promoted") == "True"]
-    return float(promoted[-1]["mape_pct"]) if promoted else None
+def load_last_mape(conn):
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT mape_pct FROM model_training_history
+            WHERE promoted = TRUE
+            ORDER BY trained_at DESC
+            LIMIT 1
+            """
+        )
+        row = cur.fetchone()
+    return float(row[0]) if row else None
 
 
-def append_history(row):
-    is_new = not os.path.exists(HISTORY_PATH)
-    with open(HISTORY_PATH, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=row.keys())
-        if is_new:
-            writer.writeheader()
-        writer.writerow(row)
+def append_history(conn, row):
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO model_training_history (total_rows, usable_rows, rmse, mape_pct, promoted)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (row["total_rows"], row["usable_rows"], row["rmse"], row["mape_pct"], row["promoted"]),
+        )
+    conn.commit()
 
 
 def write_predictions(conn, model_df):
@@ -156,7 +167,7 @@ def main():
     rmse = root_mean_squared_error(y, oof_pred)
     mape = mean_absolute_percentage_error(y, oof_pred) * 100
 
-    last_mape = load_last_mape()
+    last_mape = load_last_mape(conn)
     degraded = last_mape is not None and mape > last_mape * DEGRADATION_THRESHOLD
     promoted = not degraded
 
@@ -185,18 +196,18 @@ def main():
         write_predictions(conn, model_df)
         print(f"saved: {MODEL_PATH}, {RESULTS_PATH}, and wrote predictions to phones_normalized")
 
-    conn.close()
-
     append_history(
+        conn,
         {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
             "total_rows": len(df),
             "usable_rows": len(model_df),
             "rmse": round(rmse, 2),
             "mape_pct": round(mape, 2),
             "promoted": promoted,
-        }
+        },
     )
+
+    conn.close()
 
 
 if __name__ == "__main__":

@@ -9,3 +9,29 @@ services:
     envVars:
       - key: DATABASE_URL
         sync: false # set manually in the Render dashboard — never committed
+
+  # Daily scrape -> load -> normalize -> retrain cycle, replacing the
+  # Mac's launchd timer. Runs once/day (no need for the Mac script's
+  # 30-min-tick retry pattern -- that exists to work around a laptop
+  # that sleeps and misses ticks, which doesn't apply to a cloud cron
+  # job that runs reliably on schedule). Schedule is in UTC: 15:00 UTC
+  # = 21:00 Bangladesh time, chosen to capture most of the day's new
+  # listings before retraining -- adjust to taste.
+  #
+  # UNTESTED RISK: Bikroy already blocked GitHub Actions' hosted
+  # runners (403) earlier in this project. Render's IPs are the same
+  # general category (cloud/datacenter), so this may get blocked too
+  # -- that's exactly what deploying this is meant to find out. If it
+  # does get blocked, the Mac's launchd automation is still intact as
+  # a fallback (scripts/run_daily_scrape.sh + the plists under
+  # ~/Library/LaunchAgents on the Mac).
+  - type: cron
+    name: bikroylens-pipeline
+    runtime: python
+    plan: starter # cron jobs aren't available on the free plan
+    schedule: "0 15 * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash scripts/cloud_pipeline.sh
+    envVars:
+      - key: DATABASE_URL
+        sync: false # set manually in the Render dashboard — never committed

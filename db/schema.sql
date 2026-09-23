@@ -74,3 +74,23 @@ CREATE TABLE IF NOT EXISTS phones_normalized (
 CREATE INDEX IF NOT EXISTS idx_phones_brand_model ON phones_normalized (brand, model);
 CREATE INDEX IF NOT EXISTS idx_phones_price_tier ON phones_normalized (price_tier);
 CREATE INDEX IF NOT EXISTS idx_phones_listing_id ON phones_normalized (listing_id);
+
+-- ============================================================
+-- model_training_history: one row per retrain run. Lives in Postgres
+-- (not a git-tracked CSV) specifically so the degradation safety check
+-- and "already retrained today" gate work correctly no matter where
+-- train_model.py runs -- a Mac with a persistent git clone, or an
+-- ephemeral cloud cron container that starts from a fresh checkout
+-- every single run and has nowhere else to remember yesterday's MAPE.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS model_training_history (
+    id           SERIAL PRIMARY KEY,
+    trained_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    total_rows   INTEGER,
+    usable_rows  INTEGER,
+    rmse         NUMERIC,
+    mape_pct     NUMERIC,
+    promoted     BOOLEAN NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_model_training_history_trained_at ON model_training_history (trained_at);
