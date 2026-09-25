@@ -102,6 +102,12 @@ class StatsResponse(BaseModel):
     avg_deal_score: Optional[float] = None
 
 
+class TodayResponse(BaseModel):
+    scrape_date: Optional[date] = None
+    total: int
+    listings: list[Listing]
+
+
 class InsightsResponse(BaseModel):
     brand: Optional[str] = None
     model: Optional[str] = None
@@ -131,6 +137,25 @@ BASE_QUERY = """
         n.fair_price_max, n.deal_score
     FROM listings l
     JOIN phones_normalized n ON n.listing_id = l.id
+"""
+
+
+# Today's scrape, unfiltered by deal_score — every listing from the most
+# recent scrape day, whatever category its score lands in. This is
+# deliberately different from BASE_QUERY: that one dedupes to the latest
+# sighting of each url across ALL history, which is what "current
+# listings" means everywhere else. Here we want exactly one day's batch,
+# and the unique(url, scraped_date) constraint already guarantees at most
+# one row per url for that day, so no DISTINCT ON is needed.
+TODAY_QUERY = """
+    SELECT l.id, l.url, l.raw_title, l.price, l.condition_raw, l.location,
+        l.posted_date, l.photo_count, l.seller_type,
+        n.brand, n.model, n.storage, n.condition_clean, n.price_tier,
+        n.is_suspicious, n.predicted_price, n.fair_price_min,
+        n.fair_price_max, n.deal_score
+    FROM listings l
+    JOIN phones_normalized n ON n.listing_id = l.id
+    WHERE l.scraped_date = %s
 """
 
 
@@ -207,6 +232,27 @@ def stats():
             cities=cities,
             avg_deal_score=round(avg_deal_score, 1) if avg_deal_score is not None else None,
         )
+    finally:
+        put_conn(conn)
+
+
+@app.get("/api/today", response_model=TodayResponse)
+def today(limit: int = Query(24, le=100)):
+    conn = get_conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT MAX(scraped_date) AS d FROM listings")
+            scrape_date = cur.fetchone()["d"]
+            if scrape_date is None:
+                return TodayResponse(scrape_date=None, total=0, listings=[])
+
+            cur.execute(f"SELECT COUNT(*) AS n FROM ({TODAY_QUERY}) t", (scrape_date,))
+            total = cur.fetchone()["n"]
+
+            cur.execute(f"{TODAY_QUERY} ORDER BY l.scraped_at DESC LIMIT %s", (scrape_date, limit))
+            rows = cur.fetchall()
+
+        return TodayResponse(scrape_date=scrape_date, total=total, listings=[row_to_listing(r) for r in rows])
     finally:
         put_conn(conn)
 

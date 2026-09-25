@@ -46,6 +46,12 @@ export interface StatsResponse {
   avg_deal_score?: number;
 }
 
+export interface TodayResponse {
+  scrape_date?: string;
+  total: number;
+  listings: Listing[];
+}
+
 export interface InsightsResponse {
   brand?: string;
   model?: string;
@@ -79,6 +85,9 @@ export const fetchSearch = (params: SearchParams) =>
 
 export const fetchDeals = (limit = 20) =>
   api.get<Listing[]>("/api/deals", { params: { limit } }).then((r) => r.data);
+
+export const fetchToday = (limit = 24) =>
+  api.get<TodayResponse>("/api/today", { params: { limit } }).then((r) => r.data);
 
 export const fetchListing = (id: number) =>
   api.get<Listing>(`/api/listings/${id}`).then((r) => r.data);

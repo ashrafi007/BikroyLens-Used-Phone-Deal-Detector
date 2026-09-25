@@ -1,21 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchStats, fetchDeals, BRANDS, CITIES, type StatsResponse, type Listing } from "../api";
+import { fetchStats, fetchToday, BRANDS, CITIES, type StatsResponse, type TodayResponse } from "../api";
 import StatTile from "../components/StatTile";
 import ListingCard from "../components/ListingCard";
 import { GridSkeleton } from "../components/Loading";
+import { formatDate } from "../format";
 
 export default function Home() {
   const navigate = useNavigate();
   const [stats, setStats] = useState<StatsResponse | null>(null);
-  const [deals, setDeals] = useState<Listing[] | null>(null);
+  const [today, setToday] = useState<TodayResponse | null>(null);
   const [brand, setBrand] = useState("");
   const [city, setCity] = useState("");
   const [query, setQuery] = useState("");
 
   useEffect(() => {
     fetchStats().then(setStats).catch(() => setStats(null));
-    fetchDeals(6).then(setDeals).catch(() => setDeals([]));
+    fetchToday(12).then(setToday).catch(() => setToday({ total: 0, listings: [] }));
   }, []);
 
   function handleSearch(e: React.FormEvent) {
@@ -78,21 +79,28 @@ export default function Home() {
 
       <div className="card__header-row">
         <h2 className="card__title" style={{ fontSize: 18 }}>
-          🔥 Best deals right now
+          🆕 Today's Update
         </h2>
-        <a href="/deals" className="btn btn--sm" onClick={(e) => { e.preventDefault(); navigate("/deals"); }}>
-          See all deals →
+        <a href="/search" className="btn btn--sm" onClick={(e) => { e.preventDefault(); navigate("/search"); }}>
+          See all listings →
         </a>
       </div>
 
-      {deals === null ? (
+      {today === null ? (
         <GridSkeleton count={6} />
       ) : (
-        <div className="listing-grid">
-          {deals.map((d) => (
-            <ListingCard key={d.id} listing={d} />
-          ))}
-        </div>
+        <>
+          <p className="page__subtitle" style={{ marginTop: -10, marginBottom: 16 }}>
+            {today.total > 0
+              ? `${today.total.toLocaleString()} phones scraped${today.scrape_date ? ` on ${formatDate(today.scrape_date)}` : ""} — every deal, good or bad.`
+              : "No scrape recorded yet."}
+          </p>
+          <div className="listing-grid">
+            {today.listings.map((d) => (
+              <ListingCard key={d.id} listing={d} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
