@@ -52,11 +52,13 @@ MODEL_PATTERNS = {
 }
 
 # ----------------------------------------------------------------------
-# Storage / RAM — two notations seen in real data:
-#   standalone:  "256 GB" / "256GB"          (storage only — the common case)
-#   combined:    "12/256" / "8GB/128GB"      (RAM/storage together)
+# Storage / RAM — notations seen in real data:
+#   standalone:  "256 GB" / "256GB"                  (storage only — the common case)
+#   combined:    "12/256" / "8GB/128GB" / "12+256" /
+#                "16-512"                            (RAM/storage together,
+#                                                      "+"/"-" as common as "/")
 # ----------------------------------------------------------------------
-COMBINED_RAM_STORAGE_RE = re.compile(r"\b(\d{1,2})\s*(?:gb)?\s*/\s*(\d{2,4})\s*(?:gb)?\b", re.I)
+COMBINED_RAM_STORAGE_RE = re.compile(r"\b(\d{1,2})\s*(?:gb)?\s*[/+-]\s*(\d{2,4})\s*(?:gb)?\b", re.I)
 STANDALONE_STORAGE_RE = re.compile(r"\b(\d{2,4})\s*gb\b", re.I)
 STANDALONE_STORAGE_TB_RE = re.compile(r"\b(\d+(?:\.\d+)?)\s*tb\b", re.I)
 
