@@ -24,7 +24,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         </div>
       )}
 
-      <DealScoreBadge score={listing.deal_score} />
+      <DealScoreBadge listing={listing} />
     </Link>
   );
 }

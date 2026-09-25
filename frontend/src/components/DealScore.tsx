@@ -1,28 +1,41 @@
-// Same 0-100 scale the backend computes: 100 - ((price - predicted) / predicted * 100),
-// clipped 0-100 -- so every point below 100 means "priced this many percent
-// above our fair-price estimate," and 100 itself means at-or-under it (the
-// formula can't go higher, it's clipped there). Thresholds are chosen in
-// those same percent-over-fair terms, not just picked to look evenly
-// spaced 0-100: a 20%-over-priced phone (score 80) used to read as "Great
-// Deal" under the old 80/55/30 cutoffs, which was backwards -- being
-// meaningfully overpriced should never look great. >=100 is the only value
-// that actually means "at or under our estimate," so that's the real
-// dividing line for "Great Deal."
-export function dealScoreLabel(score: number): { label: string; cls: string } {
-  if (score >= 100) return { label: "Great Deal", cls: "deal-score--great" }; // at or under fair price
-  if (score >= 90) return { label: "Good Deal", cls: "deal-score--good" }; // up to 10% over
-  if (score >= 75) return { label: "Fair Price", cls: "deal-score--fair" }; // 10-25% over
-  return { label: "Above Market", cls: "deal-score--poor" }; // more than 25% over
+// The old scheme classified off the 0-100 deal_score number, which is
+// 100 - percent-over-fair-price, clipped at 100 for anything at-or-under
+// the estimate. That clip is exactly the problem: a listing 1% under fair
+// and one 50% under fair both hit the same ceiling and were both labeled
+// "Great Deal," which is why the whole site skewed toward that one
+// category. Classifying directly off price vs. the fair range instead --
+// the same fair_price_min/fair_price_max already shown on screen -- fixes
+// that: the range itself splits into Great (lower half, closer to the
+// model's central estimate) and Good (upper half), a price under the
+// whole range is a Steal, and above it is Above Market. Four real,
+// roughly-even buckets instead of one that swallows most of the market.
+export interface DealPriceInfo {
+  price: number;
+  predicted_price?: number | null;
+  fair_price_min?: number | null;
+  fair_price_max?: number | null;
 }
 
-export default function DealScoreBadge({ score }: { score?: number }) {
-  if (score === undefined || score === null) {
+export function dealLabel(listing: DealPriceInfo): { label: string; cls: string } | null {
+  const { price, predicted_price, fair_price_min, fair_price_max } = listing;
+  if (!predicted_price || fair_price_min == null || fair_price_max == null) return null;
+
+  if (price < fair_price_min) return { label: "Steal", cls: "deal-score--steal" };
+  if (price <= predicted_price) return { label: "Great Deal", cls: "deal-score--great" };
+  if (price <= fair_price_max) return { label: "Good Deal", cls: "deal-score--good" };
+  return { label: "Above Market", cls: "deal-score--poor" };
+}
+
+export default function DealScoreBadge({ listing }: { listing: DealPriceInfo & { deal_score?: number | null } }) {
+  const deal = dealLabel(listing);
+  if (!deal) {
     return <span className="chip">Not yet scored</span>;
   }
-  const { label, cls } = dealScoreLabel(score);
+  const { label, cls } = deal;
   return (
     <span className={`deal-score ${cls}`}>
-      {label} · {Math.round(score)}
+      {label}
+      {listing.deal_score !== undefined && listing.deal_score !== null ? ` · ${Math.round(listing.deal_score)}` : ""}
     </span>
   );
 }

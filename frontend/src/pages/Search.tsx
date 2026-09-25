@@ -30,7 +30,7 @@ const columns = [
   columnHelper.accessor("price", { header: "Price", cell: (info) => formatPrice(info.getValue()) }),
   columnHelper.accessor("deal_score", {
     header: "Deal Score",
-    cell: (info) => <DealScoreBadge score={info.getValue()} />,
+    cell: (info) => <DealScoreBadge listing={info.row.original} />,
   }),
 ];
 

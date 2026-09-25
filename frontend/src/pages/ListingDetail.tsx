@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { fetchListing, type Listing } from "../api";
-import DealScoreBadge, { dealScoreLabel } from "../components/DealScore";
+import DealScoreBadge, { dealLabel } from "../components/DealScore";
 import { formatPrice } from "../format";
 
 export default function ListingDetail() {
@@ -43,7 +43,7 @@ export default function ListingDetail() {
       ? Math.round(((listing.predicted_price - listing.price) / listing.predicted_price) * 100)
       : null;
 
-  const deal = listing.deal_score !== undefined ? dealScoreLabel(listing.deal_score) : null;
+  const deal = dealLabel(listing);
 
   return (
     <div className="page" style={{ maxWidth: 820 }}>
@@ -72,7 +72,7 @@ export default function ListingDetail() {
           </div>
           {deal && (
             <div style={{ marginTop: 12 }}>
-              <DealScoreBadge score={listing.deal_score} />
+              <DealScoreBadge listing={listing} />
             </div>
           )}
         </div>

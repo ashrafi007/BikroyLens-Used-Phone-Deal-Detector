@@ -372,6 +372,11 @@
   font-weight: 800;
 }
 
+.deal-score--steal {
+  background: rgba(201, 154, 31, 0.16);
+  color: var(--status-steal);
+}
+
 .deal-score--great {
   background: rgba(30, 158, 106, 0.14);
   color: var(--status-good);
@@ -380,11 +385,6 @@
 .deal-score--good {
   background: rgba(47, 111, 237, 0.14);
   color: var(--status-info);
-}
-
-.deal-score--fair {
-  background: rgba(217, 119, 6, 0.14);
-  color: var(--status-warn);
 }
 
 .deal-score--poor {
