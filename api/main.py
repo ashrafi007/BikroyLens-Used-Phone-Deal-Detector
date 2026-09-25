@@ -140,13 +140,20 @@ BASE_QUERY = """
 """
 
 
-# Today's scrape, unfiltered by deal_score — every listing from the most
-# recent scrape day, whatever category its score lands in. This is
+# Today's scrape, spanning every deal-score category (Steal through Above
+# Market) rather than just top scorers like /api/deals does. This is
 # deliberately different from BASE_QUERY: that one dedupes to the latest
 # sighting of each url across ALL history, which is what "current
 # listings" means everywhere else. Here we want exactly one day's batch,
 # and the unique(url, scraped_date) constraint already guarantees at most
 # one row per url for that day, so no DISTINCT ON is needed.
+#
+# deal_score IS NOT NULL: a listing with no recognized brand, or a known
+# brand but no storage stated anywhere in the title, has nothing for the
+# model to estimate a fair price from -- showing it here would mean either
+# a made-up number or an unbadged card sitting next to badged ones. Left
+# out of this feed the same way /api/deals already excludes them; still
+# reachable through /api/listings/{id} directly.
 TODAY_QUERY = """
     SELECT l.id, l.url, l.raw_title, l.price, l.condition_raw, l.location,
         l.posted_date, l.photo_count, l.seller_type,
@@ -155,7 +162,7 @@ TODAY_QUERY = """
         n.fair_price_max, n.deal_score
     FROM listings l
     JOIN phones_normalized n ON n.listing_id = l.id
-    WHERE l.scraped_date = %s
+    WHERE l.scraped_date = %s AND n.deal_score IS NOT NULL
 """
 
 
@@ -268,11 +275,19 @@ def search(
     sort: str = Query("deal_score", pattern="^(deal_score|price|newest)$"),
     limit: int = Query(50, le=200),
     offset: int = 0,
+    scored_only: bool = True,
 ):
     conn = get_conn()
     try:
         where = []
         params = []
+        # Default true: a listing with no recognized brand, or a known
+        # brand but no storage stated in the title, has nothing for the
+        # model to price -- hidden by default so every result has a real
+        # badge, same as /api/deals and /api/today. Still reachable with
+        # scored_only=false for anyone who explicitly wants to see them.
+        if scored_only:
+            where.append("deal_score IS NOT NULL")
         if brand:
             where.append("brand ILIKE %s")
             params.append(brand)
