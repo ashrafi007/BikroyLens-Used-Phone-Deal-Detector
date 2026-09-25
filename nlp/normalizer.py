@@ -53,14 +53,14 @@ MODEL_PATTERNS = {
 
 # ----------------------------------------------------------------------
 # Storage / RAM — notations seen in real data:
-#   standalone:  "256 GB" / "256GB"                  (storage only — the common case)
+#   standalone:  "256 GB" / "256GB" / "256 Gigabytes"  (storage only — the common case)
 #   combined:    "12/256" / "8GB/128GB" / "12+256" /
-#                "16-512"                            (RAM/storage together,
-#                                                      "+"/"-" as common as "/")
+#                "16-512"                              (RAM/storage together,
+#                                                        "+"/"-" as common as "/")
 # ----------------------------------------------------------------------
 COMBINED_RAM_STORAGE_RE = re.compile(r"\b(\d{1,2})\s*(?:gb)?\s*[/+-]\s*(\d{2,4})\s*(?:gb)?\b", re.I)
-STANDALONE_STORAGE_RE = re.compile(r"\b(\d{2,4})\s*gb\b", re.I)
-STANDALONE_STORAGE_TB_RE = re.compile(r"\b(\d+(?:\.\d+)?)\s*tb\b", re.I)
+STANDALONE_STORAGE_RE = re.compile(r"\b(\d{2,4})\s*(?:gb|gigabytes?)\b", re.I)
+STANDALONE_STORAGE_TB_RE = re.compile(r"\b(\d+(?:\.\d+)?)\s*(?:tb|terabytes?)\b", re.I)
 
 # ----------------------------------------------------------------------
 # Condition grading — condition_raw from the scrape is Used, Brand New,
